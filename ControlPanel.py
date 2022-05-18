@@ -4,7 +4,7 @@ from datetime import datetime
 from keras.losses import MeanSquaredError
 
 def get_params():
-    input_size = 512
+    input_size = 40
     num_filters = 64
     kernel_size = 3
     activation = 'relu'

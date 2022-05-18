@@ -12,7 +12,7 @@ class DNN:
     def __init__(self, input_size, num_filters, kernel_size, activation, kernel_regularizer, model_name, cnn_dir):
         self.cnn_dir = cnn_dir
         self.model_name = model_name
-        os.makedirs(os.path.join(self.cnn_dir, self.model_name), exist_ok=True)
+        os.makedirs(os.path.join(self.cnn_dir, 'results', self.model_name), exist_ok=True)
 
         self.model_name = model_name
         self.num_filters = num_filters
@@ -50,7 +50,7 @@ class DNN:
         if summarize:
             self.model.summary()
             if tofile:
-                with open(f'{self.cnn_dir}/{self.model_name}/summary_{self.input_size}x{self.input_size}.txt', 'w+') as f:
+                with open(f'{self.cnn_dir}/results/{self.model_name}/summary_{self.input_size}x{self.input_size}.txt', 'w+') as f:
                     self.model.summary(print_fn=lambda x: f.write(x + '\n'))
 
     def train(self, X_train, y_train, X_test, y_test, batch_size, epoch_limit, callbacks, verbose):
@@ -66,9 +66,9 @@ class DNN:
     def plot_results(self, trained:bool):
 
 
-        plot_model(self.model, to_file=f"{self.cnn_dir}/{self.model_name}/{self.model_name}model_'LR'.jpg", show_layer_names=True, rankdir='LR',
+        plot_model(self.model, to_file=f"{self.cnn_dir}/results/{self.model_name}/{self.model_name}model_'LR'.jpg", show_layer_names=True, rankdir='LR',
                    expand_nested=True, show_shapes=True)
-        plot_model(self.model, to_file=f"{self.cnn_dir}/{self.model_name}/{self.model_name}model_'TB'.jpg", show_layer_names=True, rankdir='TB',
+        plot_model(self.model, to_file=f"{self.cnn_dir}/results/{self.model_name}/{self.model_name}model_'TB'.jpg", show_layer_names=True, rankdir='TB',
                    expand_nested=False, show_shapes=True)
         if trained:
             plt.figure(figsize=(10, 10))
@@ -80,7 +80,7 @@ class DNN:
             plt.xlabel("Epochs")
             plt.ylabel("log_loss")
             plt.legend()
-            plt.savefig(f"{self.cnn_dir}/{self.model_name}/loss_{self.model_name}.jpg")
+            plt.savefig(f"{self.cnn_dir}/results/{self.model_name}/loss_{self.model_name}.jpg")
             plt.clf()
             for metric in self.metrics:
 
@@ -92,7 +92,7 @@ class DNN:
                 plt.xlabel("Epochs")
                 plt.ylabel("Accuracy")
                 plt.legend()
-                plt.savefig(f"{self.cnn_dir}/{self.model_name}/{metric}_{self.model_name}.jpg")
+                plt.savefig(f"{self.cnn_dir}/results/{self.model_name}/{metric}_{self.model_name}.jpg")
 
     def save_log(self, test_split, random_state, dataset_dir, trained:bool):
 
@@ -121,5 +121,5 @@ class DNN:
             log_dict.update(train_dict)
 
 
-        json.dump(log_dict, open(f"{self.cnn_dir}/{self.model_name}/log.json", 'w'), indent=4)
+        json.dump(log_dict, open(f"{self.cnn_dir}/results/{self.model_name}/log.json", 'w'), indent=4)
 
