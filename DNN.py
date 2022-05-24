@@ -58,7 +58,7 @@ class DNN:
         self.batch_size = batch_size
         self.epoch_limit = epoch_limit
 
-        self.history = self.model.train(X_train, y_train, batch_size=self.batch_size, epoch_limit = self.epoch_limit, callbacks = callbacks, validation_data = (X_test, y_test), verbose = verbose)
+        self.history = self.model.fit(X_train, y_train, batch_size=self.batch_size, epochs = self.epoch_limit, callbacks = callbacks, validation_data = (X_test, y_test), verbose = verbose)
         stop = datetime.datetime.now()
         self.elapsed_time = stop-start
 
