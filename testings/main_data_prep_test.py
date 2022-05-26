@@ -3,7 +3,7 @@ import imageio
 import os
 import json
 
-def img_splitter(img_mixed, img_fringes, mixed_name, patch_dict, fringe_patch_dir, mixed_patch_dir, window_size):
+def img_splitter(img_mixed, img_fringes, mixed_name, patch_dict, fringe_patch_dir, mixed_patch_dir):
 
     rows, cols = img_mixed.shape
 
@@ -12,31 +12,42 @@ def img_splitter(img_mixed, img_fringes, mixed_name, patch_dict, fringe_patch_di
     j = i = idx_X = idx_Y = 0
     patch_dict[mixed_name] = {}
     img_dict = {}
-    while (rows - j) >= window_size :
-        while (cols-i) >= window_size:
-            img_mixed_patch = img_mixed[j:j+window_size, i:i+window_size]
-            img_fringes_patch = img_fringes[j:j+window_size, i:i+window_size]
+    while (rows - j) >= 40 :
+        while (cols-i) >= 40:
+            img_mixed_patch = img_mixed[j:j+40, i:i+40]
+            img_fringes_patch = img_fringes[j:j+40, i:i+40]
 
             patch_mixed_name = f"{j}_{i}_{mixed_name}"
             patch_fringe_name = f"{j}_{i}_{patch_mixed_name.split('_')[-1]}"
 
             patch_dict[mixed_name][patch_mixed_name] = f"{j}_{i}"
-            i += (window_size-10)
+            i += 30
 
             img_dict[patch_mixed_name] = patch_fringe_name
-            if img_fringes_patch.shape == (window_size,window_size):
-                imageio.imwrite(os.path.join(fringe_patch_dir, patch_fringe_name), img_fringes_patch)
-
-                imageio.imwrite(os.path.join(mixed_patch_dir, patch_mixed_name), img_mixed_patch)
+            if img_fringes_patch.shape == (40,40):
+                print(np.max(img_fringes_patch))
+                print(np.min(img_fringes_patch))
+                print(img_fringes_patch.dtype)
+                print(np.max(img_mixed_patch))
+                print(np.min(img_mixed_patch))
+                print(img_mixed_patch.dtype)
+                print(np.max(img_fringes))
+                print(np.min(img_fringes))
+                print(img_fringes.dtype)
+                print(np.max(img_mixed))
+                print(np.min(img_mixed))
+                print(img_mixed.dtype)
+                #imageio.imwrite(os.path.join(fringe_patch_dir, patch_fringe_name), img_fringes_patch)
+                #imageio.imwrite(os.path.join(mixed_patch_dir, patch_mixed_name), img_mixed_patch)
         i = 0
-        j += (window_size-10)
+        j += 30
 
     return patch_dict, img_dict
 
 
 
 def main():
-    img_dir = os.path.join(os.getcwd(), 'data_test')
+    img_dir = os.path.join(os.getcwd(), 'data_for_test')
     mixed_dir = os.path.join(img_dir, 'mixed')
     fringes_dir = os.path.join(img_dir, 'fringes')
     fringe_patch_dir = os.path.join(img_dir, 'patches', 'fringes')
@@ -55,7 +66,7 @@ def main():
     for mixed_name, fringes_name in zip(mixed, fringes):
         img_mixed = imageio.v2.imread(os.path.join(mixed_dir,mixed_name))
         img_fringes = imageio.v2.imread(os.path.join(fringes_dir,fringes_name))
-        patch_dict_single, img_dict_single = img_splitter(img_mixed, img_fringes, mixed_name, patch_dict, fringe_patch_dir, mixed_patch_dir, 64)
+        patch_dict_single, img_dict_single = img_splitter(img_mixed, img_fringes, mixed_name, patch_dict, fringe_patch_dir, mixed_patch_dir)
 
         patch_dict.update(patch_dict_single)
         img_dict.update(img_dict_single)

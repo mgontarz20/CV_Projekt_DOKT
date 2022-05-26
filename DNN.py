@@ -7,6 +7,9 @@ import numpy as np
 import os
 import datetime
 import json
+from keras.losses import MeanSquaredError
+from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau, TensorBoard,CSVLogger
+
 
 class DNN:
     def __init__(self, input_size, num_filters, kernel_size, activation, kernel_regularizer, model_name, cnn_dir):
@@ -43,9 +46,11 @@ class DNN:
 
     def compile(self, initial_lr, loss, metrics, summarize:bool, tofile:bool):
         self.initial_lr = initial_lr
-        self.loss = loss
+        if loss =='MSE':
+            self.loss = MeanSquaredError()
         self.metrics = metrics
-        self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate = self.initial_lr, epsilon = 1e-07), loss = self.loss, metrics = self.metrics)
+
+        self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate = self.initial_lr, epsilon = 0.0001, beta_1 = 0.95), loss = self.loss, metrics = self.metrics)
 
         if summarize:
             self.model.summary()
@@ -53,17 +58,24 @@ class DNN:
                 with open(f'{self.cnn_dir}/results/{self.model_name}/summary_{self.input_size}x{self.input_size}.txt', 'w+') as f:
                     self.model.summary(print_fn=lambda x: f.write(x + '\n'))
 
-    def train(self, X_train, y_train, X_test, y_test, batch_size, epoch_limit, callbacks, verbose):
+    def train(self, X_train, y_train, X_test, y_test, batch_size, epoch_limit, verbose):
         start = datetime.datetime.now()
         self.batch_size = batch_size
         self.epoch_limit = epoch_limit
+        self.callbacks = [
+            ReduceLROnPlateau(factor=0.1, patience=20, min_lr=0.00000001, verbose=1),
+            ModelCheckpoint(f'{self.cnn_dir}/results/{self.model_name}/{self.model_name}.h5', verbose=1, save_best_only=True),
+            CSVLogger(f"{self.cnn_dir}/results/{self.model_name}/{self.model_name}.csv"),
+        ]
 
-        self.history = self.model.fit(X_train, y_train, batch_size=self.batch_size, epochs = self.epoch_limit, callbacks = callbacks, validation_data = (X_test, y_test), verbose = verbose)
+        self.history = self.model.fit(X_train, y_train, batch_size=self.batch_size, epochs = self.epoch_limit, callbacks = self.callbacks, validation_data = (X_test, y_test), verbose = verbose)
+
+        #print(self.history.history)
         stop = datetime.datetime.now()
-        self.elapsed_time = stop-start
+        self.elapsed_time = str(stop-start)
 
 
-    def plot_results(self, trained:bool):
+    def plot_results(self, trained:bool, SSIM_Metric:bool = True):
 
 
         plot_model(self.model, to_file=f"{self.cnn_dir}/results/{self.model_name}/{self.model_name}model_'LR'.jpg", show_layer_names=True, rankdir='LR',
@@ -82,8 +94,11 @@ class DNN:
             plt.legend()
             plt.savefig(f"{self.cnn_dir}/results/{self.model_name}/loss_{self.model_name}.jpg")
             plt.clf()
+            ii = 0
             for metric in self.metrics:
-
+                ii+=1
+                if not isinstance(metric, str):
+                    metric = f'SSIMMetric'
                 plt.title(f"{metric} curve")
                 plt.plot(self.history.history[metric], label=metric)
                 plt.plot(self.history.history[f"val_{metric}"], label=f"Val_{metric}")
@@ -103,9 +118,9 @@ class DNN:
             'reg':self.kernel_regularizer,
             'activation':self.activation,
             'dataset_dir':dataset_dir,
-            'loss':self.loss,
+            'loss':'MSE',
             'init_lr':self.initial_lr,
-            'metrics':self.metrics
+            'metrics':'acc_SSIM'
         }
 
         if trained:
@@ -113,8 +128,8 @@ class DNN:
                 'batch_size':self.batch_size,
                 'epoch_limit':self.epoch_limit,
                 'train_time':self.elapsed_time,
-                'best_val_loss':np.min(self.history.history["val_loss"]),
-                'for_loss':np.argmin(self.history.history["val_loss"]),
+                'best_val_loss':float(np.min(self.history.history["val_loss"])),
+                'for_loss':int(np.argmin(self.history.history["val_loss"])),
                 'test_split':test_split,
                 'random_state':random_state
             }
