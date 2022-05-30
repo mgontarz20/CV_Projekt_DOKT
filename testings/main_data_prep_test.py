@@ -12,35 +12,35 @@ def img_splitter(img_mixed, img_fringes, mixed_name, patch_dict, fringe_patch_di
     j = i = idx_X = idx_Y = 0
     patch_dict[mixed_name] = {}
     img_dict = {}
-    while (rows - j) >= 40 :
-        while (cols-i) >= 40:
-            img_mixed_patch = img_mixed[j:j+40, i:i+40]
-            img_fringes_patch = img_fringes[j:j+40, i:i+40]
+    while (rows - j) >= 64 :
+        while (cols-i) >= 64:
+            img_mixed_patch = img_mixed[j:j+64, i:i+64]
+            img_fringes_patch = img_fringes[j:j+64, i:i+64]
 
             patch_mixed_name = f"{j}_{i}_{mixed_name}"
             patch_fringe_name = f"{j}_{i}_{patch_mixed_name.split('_')[-1]}"
 
             patch_dict[mixed_name][patch_mixed_name] = f"{j}_{i}"
-            i += 30
+            i += 54
 
             img_dict[patch_mixed_name] = patch_fringe_name
-            if img_fringes_patch.shape == (40,40):
-                print(np.max(img_fringes_patch))
-                print(np.min(img_fringes_patch))
-                print(img_fringes_patch.dtype)
-                print(np.max(img_mixed_patch))
-                print(np.min(img_mixed_patch))
-                print(img_mixed_patch.dtype)
-                print(np.max(img_fringes))
-                print(np.min(img_fringes))
-                print(img_fringes.dtype)
-                print(np.max(img_mixed))
-                print(np.min(img_mixed))
-                print(img_mixed.dtype)
-                #imageio.imwrite(os.path.join(fringe_patch_dir, patch_fringe_name), img_fringes_patch)
-                #imageio.imwrite(os.path.join(mixed_patch_dir, patch_mixed_name), img_mixed_patch)
+            if img_fringes_patch.shape == (64,64):
+                # print(np.max(img_fringes_patch))
+                # print(np.min(img_fringes_patch))
+                # print(img_fringes_patch.dtype)
+                # print(np.max(img_mixed_patch))
+                # print(np.min(img_mixed_patch))
+                # print(img_mixed_patch.dtype)
+                # print(np.max(img_fringes))
+                # print(np.min(img_fringes))
+                # print(img_fringes.dtype)
+                # print(np.max(img_mixed))
+                # print(np.min(img_mixed))
+                # print(img_mixed.dtype)
+                imageio.imwrite(os.path.join(fringe_patch_dir, patch_fringe_name), img_fringes_patch)
+                imageio.imwrite(os.path.join(mixed_patch_dir, patch_mixed_name), img_mixed_patch)
         i = 0
-        j += 30
+        j += 54
 
     return patch_dict, img_dict
 

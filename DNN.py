@@ -63,6 +63,7 @@ class DNN:
         self.batch_size = batch_size
         self.epoch_limit = epoch_limit
         self.callbacks = [
+            EarlyStopping(patience=40, verbose=1),
             ReduceLROnPlateau(factor=0.1, patience=20, min_lr=0.00000001, verbose=1),
             ModelCheckpoint(f'{self.cnn_dir}/results/{self.model_name}/{self.model_name}.h5', verbose=1, save_best_only=True),
             CSVLogger(f"{self.cnn_dir}/results/{self.model_name}/{self.model_name}.csv"),

@@ -10,27 +10,34 @@ def main():
     fringes_dir = os.path.join(img_dir, 'fringes')
     fringe_patch_dir = os.path.join(img_dir, 'patches', 'fringes')
     mixed_patch_dir = os.path.join(img_dir, 'patches', 'mixed')
+    bg_patch_dir = os.path.join(img_dir, 'patches', 'bg')
     f = open(os.path.join(img_dir, 'image_pairs.json'))
     pair_dict = json.load(f)
-    mixed = np.zeros((len(pair_dict.keys()), 40, 40, 1), dtype=np.uint8)
-    fringes = np.zeros((len(pair_dict.values()), 40, 40, 1), dtype=np.uint8)
-    fringe_list = list(pair_dict.values())
-    mixed_list = list(pair_dict.keys())
+    mixed = np.zeros((len(pair_dict.items()), 40, 40, 1), dtype='float32')
+    fringes = np.zeros((len(pair_dict.items()), 40, 40, 1), dtype='float32')
+    bgs = np.zeros((len(pair_dict.items()), 40, 40, 1), dtype='float32')
+    bg_list = [f"{value[1]}" for idx,value in enumerate(pair_dict.values())]
+    fringe_list = [f"{value[0]}" for idx,value in enumerate(pair_dict.values())]
+    mixed_list = [f"{key}" for idx,key in enumerate(pair_dict.keys())]
 
-    for i in tqdm(range(len(fringes)), desc="IMPORTING WRAPPED: "):
+    for i in tqdm(range(len(fringes)), desc="IMPORTING FRINGES: "):
         fringe_patch_img = imageio.v2.imread(os.path.join(fringe_patch_dir, fringe_list[i]))
         fringe_patch_img = np.resize(fringe_patch_img, (40,40,1))
-        fringes[i] = fringe_patch_img
-
-    for j in tqdm(range(len(mixed)), desc="IMPORTING WRAPPED: "):
+        fringes[i] = (fringe_patch_img/255.0).astype('float32')
+    np.savez_compressed(os.path.join(img_dir, 'fringes_patches.npz'), fringes)
+    del fringes
+    for j in tqdm(range(len(mixed)), desc="IMPORTING MIXED: "):
         mixed_patch_img = imageio.v2.imread(os.path.join(mixed_patch_dir, mixed_list[j]))
         mixed_patch_img = np.resize(mixed_patch_img, (40,40,1))
-        mixed[j] = mixed_patch_img
-
-    print(fringes.shape)
-    print(mixed.shape)
-    np.savez_compressed(os.path.join(img_dir, 'fringes_patches.npz'), fringes)
+        mixed[j] = (mixed_patch_img/255.0).astype('float32')
     np.savez_compressed(os.path.join(img_dir, 'mixed_patches.npz'), mixed)
+    del mixed
+    for k in tqdm(range(len(bgs)), desc="IMPORTING BGs: "):
+        bg_patch_img = imageio.v2.imread(os.path.join(bg_patch_dir, bg_list[k]))
+        bg_patch_img = np.resize(bg_patch_img, (40,40,1))
+        bgs[k] = (bg_patch_img/255.0).astype('float32')
+    np.savez_compressed(os.path.join(img_dir, 'bg_patches.npz'), bgs)
+    del bgs
 
 
 

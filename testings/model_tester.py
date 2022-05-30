@@ -22,10 +22,10 @@ def get_model_paths(cnn_paths):
 
 def load_imgs(img_dirs):
     mixed = next(os.walk(os.path.join(os.getcwd(), 'data_for_test','patches', 'mixed')))[2]
-    imgs = np.empty((len(mixed), 40,40,1))
+    imgs = np.empty((len(mixed), 64,64,1))
 
     for idx, filename in enumerate(mixed):
-        imgs[idx] = np.resize(imageio.v2.imread(os.path.join(img_dirs, filename)), (40,40,1)).astype(np.uint8)
+        imgs[idx] = (np.resize(imageio.v2.imread(os.path.join(img_dirs, filename)), (64,64,1))/255.0).astype('float32')
 
     return imgs, mixed
 
@@ -34,15 +34,19 @@ def predict(cnn_paths, dirs, imgs, save_path, filenames):
     for dir in dirs:
         files = next(os.walk(os.path.join(cnn_paths, dir)))[2]
         for file in files:
-            if file.endswith('.h5'):
+            print(file)
+            if file.endswith('h5'):
+
                 model = load_model(os.path.join(cnn_paths, dir, file), custom_objects={'SSIMMetric': SSIMMetric}, compile=False)
                 os.makedirs(os.path.join(save_path, file.split('.')[0]),exist_ok=True)
-        for img, filename in zip(imgs, filenames):
-            try:
-                pred = model.predict(np.array(img)).astype(np.uint8).squeeze()
-                #print(pred.shape)
-                imageio.imwrite(os.path.join(save_path, file.split('.')[0], f"{filename.split('.')[0]}.png"), pred)
-            except FileNotFoundError: pass
+                for img, filename in zip(imgs, filenames):
+                    try:
+                        pred = model.predict(img).astype('float32')[:,:,:,0]
+                        print(pred.shape)
+                        imageio.imwrite(os.path.join(save_path, file.split('.')[0], f"{filename.split('.')[0]}.tiff"), pred)
+                    except FileNotFoundError as err:
+                        print(err)
+                        pass
         del model
 def main():
     root_path = os.path.dirname(os.getcwd())

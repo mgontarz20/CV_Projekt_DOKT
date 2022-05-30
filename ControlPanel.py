@@ -15,16 +15,17 @@ def get_params():
     activation = 'relu'
     kernel_regularizer = 'l2'
     timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M')
-    model_name = f"DNN_CV_{input_size}x{input_size}_{timestamp}"
+    output_type = 'bg'
+    model_name = f"DNN_CV_{input_size}x{input_size}_{timestamp}_{output_type}"
 
-    return input_size, num_filters,kernel_size,activation,kernel_regularizer,model_name
+    return input_size, num_filters,kernel_size,activation,kernel_regularizer,model_name, output_type
 
 def getTrainingParams():
     initial_lr = 0.001
     loss = MeanSquaredError()
 
     def SSIMMetric(y_true, y_pred):
-        return tf.reduce_mean(tf.image.ssim(y_true, y_pred, 255.0))
+        return tf.reduce_mean(tf.image.ssim(y_true, y_pred, 1.0))
     metrics = ['accuracy', SSIMMetric]
     test_split = 0.2
     random_state = 21332
@@ -35,10 +36,10 @@ def getTrainingParams():
     return initial_lr,loss,metrics, test_split, random_state, batch_size, epoch_limit
 
 
-def load_data(img_dir, test_size, random_state):
+def load_data(img_dir, test_size, random_state, output_type):
 
     X = np.load(os.path.join(img_dir, 'mixed_patches.npz'))['arr_0']
-    y = np.load(os.path.join(img_dir, 'fringes_patches.npz'))['arr_0']
+    y = np.load(os.path.join(img_dir, f'{output_type}_patches.npz'))['arr_0']
     X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=test_size, random_state=random_state)
     print(X_train.shape, X_valid.shape, y_train.shape, y_valid.shape)
     print(X_train.dtype, X_valid.dtype, y_train.dtype, y_valid.dtype)
@@ -55,9 +56,9 @@ def main():
     img_dir = os.path.join(cnn_dir, 'data_prep', 'data_test')
     dataset_folder = 'dataset_1_test'
     dataset_dir = os.path.join(cnn_dir, dataset_folder)
-    input_size, num_filters, kernel_size, activation, kernel_regularizer, model_name = get_params()
+    input_size, num_filters, kernel_size, activation, kernel_regularizer, model_name, output_type = get_params()
     initial_lr, loss, metrics, test_split, random_state,  batch_size, epoch_limit = getTrainingParams()
-    X_train, X_valid, y_train, y_valid = load_data(img_dir, test_split, random_state)
+    X_train, X_valid, y_train, y_valid = load_data(img_dir, test_split, random_state, output_type)
 
 
 
