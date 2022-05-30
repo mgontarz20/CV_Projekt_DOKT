@@ -6,7 +6,10 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
 
-#def custom_mse(y_true, y_pred)
+
+def SSIMMetric(self, y_true, y_pred):
+    return tf.reduce_mean(tf.image.ssim(y_true, y_pred, 1.0))
+
 
 def get_params():
     input_size = 40
@@ -20,20 +23,21 @@ def get_params():
 
     return input_size, num_filters,kernel_size,activation,kernel_regularizer,model_name, output_type
 
+
 def getTrainingParams():
     initial_lr = 0.001
-    loss = MeanSquaredError()
+    #loss = custom_mse_SSIM_Loss(y_true, y_pred)
 
     def SSIMMetric(y_true, y_pred):
         return tf.reduce_mean(tf.image.ssim(y_true, y_pred, 1.0))
     metrics = ['accuracy', SSIMMetric]
     test_split = 0.2
     random_state = 21332
-    loss = 'MSE'
+    loss_name = 'custom_SSIM_loss'
     batch_size = 16
     epoch_limit = 600
 
-    return initial_lr,loss,metrics, test_split, random_state, batch_size, epoch_limit
+    return initial_lr, loss_name, metrics, test_split, random_state, batch_size, epoch_limit
 
 
 def load_data(img_dir, test_size, random_state, output_type):
@@ -54,10 +58,11 @@ def main():
 
     cnn_dir = os.getcwd()
     img_dir = os.path.join(cnn_dir, 'data_prep', 'data_test')
+    print(img_dir)
     dataset_folder = 'dataset_1_test'
     dataset_dir = os.path.join(cnn_dir, dataset_folder)
     input_size, num_filters, kernel_size, activation, kernel_regularizer, model_name, output_type = get_params()
-    initial_lr, loss, metrics, test_split, random_state,  batch_size, epoch_limit = getTrainingParams()
+    initial_lr, loss_name, metrics, test_split, random_state,  batch_size, epoch_limit = getTrainingParams()
     X_train, X_valid, y_train, y_valid = load_data(img_dir, test_split, random_state, output_type)
 
 
@@ -65,7 +70,7 @@ def main():
     DNN_40x40 = DNN(input_size, num_filters,kernel_size,activation,kernel_regularizer,model_name, cnn_dir)
 
     model = DNN_40x40.getModel()
-    DNN_40x40.compile(initial_lr,loss,metrics,summarize=True, tofile=True)
+    DNN_40x40.compile(initial_lr,metrics, loss_name,summarize=True, tofile=True)
     DNN_40x40.train(X_train, y_train, X_valid, y_valid, batch_size, epoch_limit, verbose=1)
     DNN_40x40.plot_results(trained=True)
     DNN_40x40.save_log(test_split, random_state, dataset_dir, trained=True)

@@ -2,8 +2,10 @@ import numpy as np
 import imageio
 import os
 import json
+import random
+from tqdm import tqdm
 
-def img_splitter(img_mixed, img_fringes, mixed_name, patch_dict, fringe_patch_dir, mixed_patch_dir):
+def img_splitter(iter, img_mixed, img_fringes, img_bg, mixed_name, patch_dict, fringe_patch_dir, mixed_patch_dir, bg_patch_dir, window_size):
 
     rows, cols = img_mixed.shape
 
@@ -12,35 +14,27 @@ def img_splitter(img_mixed, img_fringes, mixed_name, patch_dict, fringe_patch_di
     j = i = idx_X = idx_Y = 0
     patch_dict[mixed_name] = {}
     img_dict = {}
-    while (rows - j) >= 64 :
-        while (cols-i) >= 64:
-            img_mixed_patch = img_mixed[j:j+64, i:i+64]
-            img_fringes_patch = img_fringes[j:j+64, i:i+64]
+    while (rows - j) >= window_size :
+        while (cols-i) >= window_size:
+            img_mixed_patch = img_mixed[j:j+window_size, i:i+window_size]
+            img_fringes_patch = img_fringes[j:j+window_size, i:i+window_size]
+            img_bg_patch = img_bg[j:j+window_size, i:i+window_size]
 
             patch_mixed_name = f"{j}_{i}_{mixed_name}"
+            patch_bg_name = f"{j}_{i}_{'_'.join(mixed_name.split('_')[:-1])}.png"
             patch_fringe_name = f"{j}_{i}_{patch_mixed_name.split('_')[-1]}"
 
             patch_dict[mixed_name][patch_mixed_name] = f"{j}_{i}"
-            i += 54
+            i += (window_size-10)
 
-            img_dict[patch_mixed_name] = patch_fringe_name
-            if img_fringes_patch.shape == (64,64):
-                # print(np.max(img_fringes_patch))
-                # print(np.min(img_fringes_patch))
-                # print(img_fringes_patch.dtype)
-                # print(np.max(img_mixed_patch))
-                # print(np.min(img_mixed_patch))
-                # print(img_mixed_patch.dtype)
-                # print(np.max(img_fringes))
-                # print(np.min(img_fringes))
-                # print(img_fringes.dtype)
-                # print(np.max(img_mixed))
-                # print(np.min(img_mixed))
-                # print(img_mixed.dtype)
-                imageio.imwrite(os.path.join(fringe_patch_dir, patch_fringe_name), img_fringes_patch)
-                imageio.imwrite(os.path.join(mixed_patch_dir, patch_mixed_name), img_mixed_patch)
+            img_dict[patch_mixed_name] = (patch_fringe_name, patch_bg_name)
+            if img_fringes_patch.shape == (window_size,window_size):
+                imageio.imwrite(os.path.join(fringe_patch_dir, f"{patch_fringe_name}"), img_fringes_patch)
+                imageio.imwrite(os.path.join(bg_patch_dir, f"{patch_bg_name}"), img_bg_patch)
+
+                imageio.imwrite(os.path.join(mixed_patch_dir, f"{patch_mixed_name}"), img_mixed_patch)
         i = 0
-        j += 54
+        j += (window_size-10)
 
     return patch_dict, img_dict
 
@@ -52,21 +46,29 @@ def main():
     fringes_dir = os.path.join(img_dir, 'fringes')
     fringe_patch_dir = os.path.join(img_dir, 'patches', 'fringes')
     mixed_patch_dir = os.path.join(img_dir, 'patches', 'mixed')
+    bg_dir = os.path.join(img_dir, 'bg')
+    bg_patch_dir = os.path.join(img_dir, 'patches', 'bg')
     os.makedirs(fringe_patch_dir, exist_ok=True)
+    os.makedirs(bg_patch_dir, exist_ok=True)
+
     os.makedirs(mixed_patch_dir, exist_ok=True)
     patch_dict = {}
     img_dict = {}
+    #mixed = random.sample(next(os.walk(mixed_dir))[2], 50)
     mixed = next(os.walk(mixed_dir))[2]
-
     fringes = [file.split('_')[-1] for file in mixed]
+    bg = [f"{'_'.join(file.split('_')[:-1])}.jpg" for file in mixed]
     # print(mixed)
     # print(fringes)
     # print(len(mixed))
-
-    for mixed_name, fringes_name in zip(mixed, fringes):
-        img_mixed = imageio.v2.imread(os.path.join(mixed_dir,mixed_name))
-        img_fringes = imageio.v2.imread(os.path.join(fringes_dir,fringes_name))
-        patch_dict_single, img_dict_single = img_splitter(img_mixed, img_fringes, mixed_name, patch_dict, fringe_patch_dir, mixed_patch_dir)
+    iter = 0
+    for mixed_name, fringes_name, bg_name in tqdm(zip(mixed, fringes, bg), desc="PREPARING PATCHES: "):
+        iter += 1
+        img_mixed = imageio.v2.imread(os.path.join(mixed_dir, mixed_name))
+        img_fringes = imageio.v2.imread(os.path.join(fringes_dir, fringes_name))
+        img_bg = imageio.v2.imread(os.path.join(bg_dir, bg_name))
+        patch_dict_single, img_dict_single = img_splitter(iter, img_mixed, img_fringes, img_bg, mixed_name, patch_dict,
+                                                          fringe_patch_dir, mixed_patch_dir, bg_patch_dir, 40)
 
         patch_dict.update(patch_dict_single)
         img_dict.update(img_dict_single)
@@ -75,8 +77,6 @@ def main():
 
     json.dump(patch_dict, open(f"{img_dir}/image_coords.json", 'w'), indent=4)
     json.dump(img_dict, open(f"{img_dir}/image_pairs.json", 'w'), indent=4)
-
-
 
 
 if __name__ == '__main__':

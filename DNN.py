@@ -44,13 +44,18 @@ class DNN:
 
         return self.model
 
-    def compile(self, initial_lr, loss, metrics, summarize:bool, tofile:bool):
+
+
+    def custom_mse_SSIM_Loss(self, y_true, y_pred):
+        return (1 - tf.reduce_mean(tf.image.ssim(y_true, y_pred, 1.0)))
+
+    def compile(self, initial_lr, metrics, loss_name, summarize:bool, tofile:bool):
         self.initial_lr = initial_lr
-        if loss =='MSE':
-            self.loss = MeanSquaredError()
+        #self.loss = loss
+        self.loss_name = loss_name
         self.metrics = metrics
 
-        self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate = self.initial_lr, epsilon = 0.0001, beta_1 = 0.95), loss = self.loss, metrics = self.metrics)
+        self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate = self.initial_lr, epsilon = 0.0001, beta_1 = 0.95), loss = self.custom_mse_SSIM_Loss, metrics = self.metrics)
 
         if summarize:
             self.model.summary()
@@ -110,6 +115,8 @@ class DNN:
                 plt.legend()
                 plt.savefig(f"{self.cnn_dir}/results/{self.model_name}/{metric}_{self.model_name}.jpg")
 
+
+
     def save_log(self, test_split, random_state, dataset_dir, trained:bool):
 
         log_dict = {
@@ -119,7 +126,7 @@ class DNN:
             'reg':self.kernel_regularizer,
             'activation':self.activation,
             'dataset_dir':dataset_dir,
-            'loss':'MSE',
+            'loss':self.loss_name,
             'init_lr':self.initial_lr,
             'metrics':'acc_SSIM'
         }

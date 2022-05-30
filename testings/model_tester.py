@@ -5,6 +5,7 @@ import numpy as np
 import os
 import shutil
 import imageio
+import sys
 
 def SSIMMetric(y_true, y_pred):
     return tf.reduce_mean(tf.image.ssim(y_true, y_pred, 255.0))
@@ -20,12 +21,12 @@ def get_model_paths(cnn_paths):
                 good_dirs.append(dir)
     return good_dirs
 
-def load_imgs(img_dirs):
+def load_imgs(img_dirs,size):
     mixed = next(os.walk(os.path.join(os.getcwd(), 'data_for_test','patches', 'mixed')))[2]
     imgs = np.empty((len(mixed), 64,64,1))
 
     for idx, filename in enumerate(mixed):
-        imgs[idx] = (np.resize(imageio.v2.imread(os.path.join(img_dirs, filename)), (64,64,1))/255.0).astype('float32')
+        imgs[idx] = (np.resize(imageio.v2.imread(os.path.join(img_dirs, filename)), (size,size,1))/255.0).astype('float32')
 
     return imgs, mixed
 
@@ -49,6 +50,7 @@ def predict(cnn_paths, dirs, imgs, save_path, filenames):
                         pass
         del model
 def main():
+    size = sys.argv[0]
     root_path = os.path.dirname(os.getcwd())
     cnn_paths = os.path.join(root_path, 'results')
     img_path = os.path.join(root_path,'testings','data_for_test','patches', 'mixed')
