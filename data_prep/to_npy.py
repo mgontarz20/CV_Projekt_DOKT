@@ -22,21 +22,21 @@ def main(size):
     mixed_list = [f"{key}" for idx,key in enumerate(pair_dict.keys())]
 
     for i in tqdm(range(len(fringes)), desc="IMPORTING FRINGES: "):
-        fringe_patch_img = imageio.v2.imread(os.path.join(fringe_patch_dir, fringe_list[i]))
+        fringe_patch_img = imageio.v2.imread(os.path.join(fringe_patch_dir, fringe_list[i])).astype('float32')
         fringe_patch_img = np.resize(fringe_patch_img, (size,size,1))
-        fringes[i] = (fringe_patch_img/255.0).astype('float32')
+        fringes[i] = fringe_patch_img/255.0
     np.savez_compressed(os.path.join(img_dir, 'fringes_patches.npz'), fringes)
     del fringes
     for j in tqdm(range(len(mixed)), desc="IMPORTING MIXED: "):
-        mixed_patch_img = imageio.v2.imread(os.path.join(mixed_patch_dir, mixed_list[j]))
+        mixed_patch_img = imageio.v2.imread(os.path.join(mixed_patch_dir, mixed_list[j])).astype('float32')
         mixed_patch_img = np.resize(mixed_patch_img, (size,size,1))
-        mixed[j] = (mixed_patch_img/255.0).astype('float32')
+        mixed[j] = mixed_patch_img/255.0
     np.savez_compressed(os.path.join(img_dir, 'mixed_patches.npz'), mixed)
     del mixed
     for k in tqdm(range(len(bgs)), desc="IMPORTING BGs: "):
-        bg_patch_img = imageio.v2.imread(os.path.join(bg_patch_dir, bg_list[k]))
+        bg_patch_img = imageio.v2.imread(os.path.join(bg_patch_dir, bg_list[k])).astype('float32')
         bg_patch_img = np.resize(bg_patch_img, (size,size,1))
-        bgs[k] = (bg_patch_img/255.0).astype('float32')
+        bgs[k] = bg_patch_img/255.0
     np.savez_compressed(os.path.join(img_dir, 'bg_patches.npz'), bgs)
     del bgs
 
@@ -45,5 +45,5 @@ def main(size):
     
 
 if __name__ == '__main__':
-    size = sys.argv[0]
-    main(size)
+    size = sys.argv[1]
+    main(int(size))

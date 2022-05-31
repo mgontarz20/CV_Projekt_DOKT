@@ -20,9 +20,9 @@ def img_splitter(iter, img_mixed, img_fringes, img_bg, mixed_name, patch_dict, f
             img_fringes_patch = img_fringes[j:j+window_size, i:i+window_size]
             img_bg_patch = img_bg[j:j+window_size, i:i+window_size]
 
-            patch_mixed_name = f"{j}_{i}_{mixed_name}"
-            patch_bg_name = f"{j}_{i}_{'_'.join(mixed_name.split('_')[:-1])}.png"
-            patch_fringe_name = f"{j}_{i}_{patch_mixed_name.split('_')[-1]}"
+            patch_mixed_name = f"{window_size}_{j}_{i}_{mixed_name}"
+            patch_bg_name = f"{window_size}_{j}_{i}_{'_'.join(mixed_name.split('_')[:-1])}.png"
+            patch_fringe_name = f"{window_size}_{j}_{i}_{patch_mixed_name.split('_')[-1]}"
 
             patch_dict[mixed_name][patch_mixed_name] = f"{j}_{i}"
             i += (window_size-10)
@@ -44,16 +44,15 @@ def main():
     img_dir = os.path.join(os.getcwd(), 'data_for_test')
     mixed_dir = os.path.join(img_dir, 'mixed')
     fringes_dir = os.path.join(img_dir, 'fringes')
-    fringe_patch_dir = os.path.join(img_dir, 'patches', 'fringes')
-    mixed_patch_dir = os.path.join(img_dir, 'patches', 'mixed')
-    bg_dir = os.path.join(img_dir, 'bg')
-    bg_patch_dir = os.path.join(img_dir, 'patches', 'bg')
-    os.makedirs(fringe_patch_dir, exist_ok=True)
-    os.makedirs(bg_patch_dir, exist_ok=True)
+    models_dir = '/home/mgontarz/PycharmProjects/CV_Projekt_DOKT/results'
 
-    os.makedirs(mixed_patch_dir, exist_ok=True)
+    bg_dir = os.path.join(img_dir, 'bg')
+
+
     patch_dict = {}
     img_dict = {}
+    img_sizes = set([int(file.split("_")[2].split('x')[0]) for file in next(os.walk(models_dir))[1]])
+    print(img_sizes)
     #mixed = random.sample(next(os.walk(mixed_dir))[2], 50)
     mixed = next(os.walk(mixed_dir))[2]
     fringes = [file.split('_')[-1] for file in mixed]
@@ -67,11 +66,20 @@ def main():
         img_mixed = imageio.v2.imread(os.path.join(mixed_dir, mixed_name))
         img_fringes = imageio.v2.imread(os.path.join(fringes_dir, fringes_name))
         img_bg = imageio.v2.imread(os.path.join(bg_dir, bg_name))
-        patch_dict_single, img_dict_single = img_splitter(iter, img_mixed, img_fringes, img_bg, mixed_name, patch_dict,
-                                                          fringe_patch_dir, mixed_patch_dir, bg_patch_dir, 40)
+        for size in img_sizes:
+            fringe_patch_dir = os.path.join(img_dir, f'patches_{size}', 'fringes')
+            mixed_patch_dir = os.path.join(img_dir, f'patches_{size}', 'mixed')
+            bg_patch_dir = os.path.join(img_dir, f'patches_{size}', 'bg')
 
-        patch_dict.update(patch_dict_single)
-        img_dict.update(img_dict_single)
+            os.makedirs(f'{fringe_patch_dir}', exist_ok=True)
+            os.makedirs(f'{mixed_patch_dir}', exist_ok=True)
+
+            os.makedirs(f'{bg_patch_dir}', exist_ok=True)
+            patch_dict_single, img_dict_single = img_splitter(iter, img_mixed, img_fringes, img_bg, mixed_name, patch_dict,
+                                                          fringe_patch_dir, mixed_patch_dir, bg_patch_dir, size)
+
+            patch_dict.update(patch_dict_single)
+            img_dict.update(img_dict_single)
 
         del img_mixed, img_fringes, patch_dict_single
 

@@ -4,6 +4,8 @@ import os
 import json
 import random
 from tqdm import tqdm
+import to_npy
+import sys
 def img_splitter(iter, img_mixed, img_fringes, img_bg, mixed_name, patch_dict, fringe_patch_dir, mixed_patch_dir, bg_patch_dir, window_size):
 
     rows, cols = img_mixed.shape
@@ -52,8 +54,8 @@ def main():
     os.makedirs(bg_patch_dir, exist_ok=True)
     patch_dict = {}
     img_dict = {}
-    mixed = random.sample(next(os.walk(mixed_dir))[2],50)
-    #mixed = next(os.walk(mixed_dir))[2]
+    #mixed = random.sample(next(os.walk(mixed_dir))[2],50)
+    mixed = next(os.walk(mixed_dir))[2]
     fringes = [file.split('_')[-1] for file in mixed]
     bg = [f"{'_'.join(file.split('_')[:-1])}.jpg" for file in mixed]
     # print(mixed)
@@ -65,7 +67,7 @@ def main():
         img_mixed = imageio.v2.imread(os.path.join(mixed_dir,mixed_name))
         img_fringes = imageio.v2.imread(os.path.join(fringes_dir,fringes_name))
         img_bg = imageio.v2.imread(os.path.join(bg_dir,bg_name))
-        patch_dict_single, img_dict_single = img_splitter(iter, img_mixed, img_fringes, img_bg, mixed_name, patch_dict, fringe_patch_dir, mixed_patch_dir,bg_patch_dir, 40)
+        patch_dict_single, img_dict_single = img_splitter(iter, img_mixed, img_fringes, img_bg, mixed_name, patch_dict, fringe_patch_dir, mixed_patch_dir,bg_patch_dir, 512)
 
         patch_dict.update(patch_dict_single)
         img_dict.update(img_dict_single)
@@ -79,4 +81,7 @@ def main():
 
 
 if __name__ == '__main__':
+    size = sys.argv[1]
+    print(size)
     main()
+    to_npy.main(int(size))
