@@ -6,6 +6,7 @@ from keras.losses import MeanSquaredError
 import numpy as np
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 
 def SSIMMetric(self, y_true, y_pred):
@@ -19,14 +20,15 @@ def get_params(arch:str):
     activation = 'relu'
     kernel_regularizer = 'l2'
     timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M')
-    output_type = 'bg'
+    output_type = 'fringes'
+    layers = 11
     if arch.upper() == 'DNN':
-        model_name = f"DNN_CV_{input_size}x{input_size}_{timestamp}_{output_type}"
+        model_name = f"DNN_CV_{input_size}x{input_size}_{timestamp}_{output_type}_{layers}"
     elif arch.upper() == 'CNN1':
         model_name = f"CNN1_CV_{input_size}x{input_size}_{timestamp}_{output_type}"
     else:
         model_name = f"Other_CV_{input_size}x{input_size}_{timestamp}_{output_type}"
-    return input_size, num_filters,kernel_size,activation,kernel_regularizer,model_name, output_type
+    return input_size, num_filters,kernel_size,activation,kernel_regularizer,model_name, output_type, layers
 
 
 def getTrainingParams():
@@ -66,32 +68,39 @@ def main():
     dataset_folder = 'dataset_1_test'
     dataset_dir = os.path.join(cnn_dir, dataset_folder)
     print('[INFO] Getting params')
-    arch = 'CNN1'
-    input_size, num_filters, kernel_size, activation, kernel_regularizer, model_name, output_type = get_params(arch)
+    arch = 'DNN'
+    input_size, num_filters, kernel_size, activation, kernel_regularizer, model_name, output_type, layers = get_params(arch)
     initial_lr, loss_name, metrics, test_split, random_state,  batch_size, epoch_limit = getTrainingParams()
     print('[INFO] Loading data')
     X_train, X_valid, y_train, y_valid = load_data(img_dir, test_split, random_state, output_type)
 
+    #
+    # fig, ax = plt.subplots(1,2)
+    #
+    # ax[0].imshow(X_train[1000])
+    # ax[1].imshow(y_train[1000])
+    #
+    # plt.show()
 
     print('[INFO] Data loaded, Defining and initializing model')
-    #DNN_40x40 = DNN(input_size, num_filters,kernel_size,activation,kernel_regularizer,model_name, cnn_dir)
+    DNN_40x40 = DNN(input_size, num_filters,kernel_size,activation,kernel_regularizer,model_name, cnn_dir, layers)
 
-    # model = DNN_40x40.getModel()
-    # DNN_40x40.compile(initial_lr,metrics, loss_name,summarize=True, tofile=True)
-    # DNN_40x40.train(X_train, y_train, X_valid, y_valid, batch_size, epoch_limit, verbose=1)
-    # DNN_40x40.save_log(test_split, random_state, dataset_dir, trained=True)
+    model = DNN_40x40.getModel()
+    DNN_40x40.compile(initial_lr,metrics, loss_name,summarize=True, tofile=True)
+    DNN_40x40.train(X_train, y_train, X_valid, y_valid, batch_size, epoch_limit, verbose=1)
+    DNN_40x40.save_log(test_split, random_state, dataset_dir, trained=True)
+
+    DNN_40x40.plot_results(trained=True)
+
+
+    # CNN1Faudl = CNN1(input_size, num_filters,kernel_size,activation,kernel_regularizer,model_name, cnn_dir, layers)
     #
-    # DNN_40x40.plot_results(trained=True)
+    # model = CNN1Faudl.getModel()
+    # CNN1Faudl.compile(initial_lr, metrics, loss_name, summarize=True, tofile=True)
+    # CNN1Faudl.train(X_train, y_train, X_valid, y_valid, batch_size, epoch_limit, verbose=1)
+    # CNN1Faudl.save_log(test_split, random_state, dataset_dir, trained=False)
     #
-
-    CNN1Faudl = CNN1(input_size, num_filters,kernel_size,activation,kernel_regularizer,model_name, cnn_dir)
-
-    model = CNN1Faudl.getModel()
-    CNN1Faudl.compile(initial_lr, metrics, loss_name, summarize=True, tofile=True)
-    CNN1Faudl.train(X_train, y_train, X_valid, y_valid, batch_size, epoch_limit, verbose=1)
-    CNN1Faudl.save_log(test_split, random_state, dataset_dir, trained=False)
-
-    CNN1Faudl.plot_results(trained=False)
+    # CNN1Faudl.plot_results(trained=False)
 
 
 

@@ -12,7 +12,7 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau, T
 
 
 class DNN:
-    def __init__(self, input_size, num_filters, kernel_size, activation, kernel_regularizer, model_name, cnn_dir):
+    def __init__(self, input_size, num_filters, kernel_size, activation, kernel_regularizer, model_name, cnn_dir, layers):
         self.cnn_dir = cnn_dir
         self.model_name = model_name
         os.makedirs(os.path.join(self.cnn_dir, 'results', self.model_name), exist_ok=True)
@@ -24,6 +24,7 @@ class DNN:
         self.kernel_regularizer = kernel_regularizer
         self.input_size = input_size
         self.cnn_dir = cnn_dir
+        self.layers = layers
 
 
     def getModel(self):
@@ -34,9 +35,9 @@ class DNN:
         self.model.add(layers.Conv2D(filters= self.num_filters, kernel_size=(self.kernel_size, self.kernel_size), padding = 'same', kernel_regularizer=self.kernel_regularizer, strides = 1))
         self.model.add(layers.ReLU())
 
-        for i in range(15):
+        for i in range(self.layers):
             self.model.add(layers.Conv2D(filters=self.num_filters, kernel_size=(self.kernel_size, self.kernel_size), padding='same',
-                                         kernel_regularizer=self.kernel_regularizer, strides=1))
+                                         kernel_regularizer=self.kernel_regularizer, strides=(1,1)))
             self.model.add(layers.BatchNormalization())
             self.model.add(layers.ReLU())
 
