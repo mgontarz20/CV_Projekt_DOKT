@@ -23,12 +23,9 @@ def choose_filenames(pred_dir):
     return chosen_paths
 
 
-def load_imgs(pred_dir, patch_dir, file_path, size):
+def load_imgs(pred_dir, patch_dir, file_path, size, type):
     mixed_name = f"{file_path.split('/')[-1].split('.')[0]}.png"
-    if len(file_path.split("_")) == 6:
-        type = file_path.split("_")[-1]
-    else:
-        type = 'fringes'
+
     fringe_name = f"{size}_{file_path.split('/')[-1].split('_')[1]}_{file_path.split('/')[-1].split('_')[2]}_{file_path.split('/')[-1].split('_')[-1].split('.')[0]}.png"
     pred = imageio.v2.imread(file_path)
     patch_mixed = imageio.v2.imread(os.path.join(patch_dir, 'mixed', mixed_name).replace(r'\\', '/'))
@@ -56,7 +53,11 @@ def main():
             if f'{path.split("/")[-2]}' not in next(os.walk(f'{"/".join(path.split("/")[:-2])}/showcase_{size}/'))[1] or len(next(os.walk(f'{"/".join(path.split("/")[:-2])}/showcase_{size}/{path.split("/")[-2]}'))[2]) <= 5:
                 fig, ax = plt.subplots(1, 3, figsize=(25, 15))
                 os.makedirs(f'{"/".join(path.split("/")[:-2])}/showcase_{size}/{path.split("/")[-2]}',exist_ok=True)
-                pred, patch_mixed, patch_fringes = load_imgs(pred_dir, patch_dir, path, size)
+                if len(path.split("_")) == 6:
+                    type = path.split("_")[-1]
+                else:
+                    type = 'fringes'
+                pred, patch_mixed, patch_fringes = load_imgs(pred_dir, patch_dir, path, size, type)
                 img0 = ax[0].imshow(patch_mixed)
                 img1 = ax[1].imshow((pred))
                 img2 = ax[2].imshow(patch_fringes)

@@ -13,21 +13,22 @@ def SSIMMetric(self, y_true, y_pred):
     return tf.reduce_mean(tf.image.ssim(y_true, y_pred, 1.0))
 
 
-def get_params(arch:str):
+def get_params(arch:str, loss_name:str):
     input_size = 64
-    num_filters = 60
+    num_filters = 64
     kernel_size = 3
     activation = 'relu'
     kernel_regularizer = 'l2'
     timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M')
     output_type = 'fringes'
-    layers = 11
+
+    layers = 12
     if arch.upper() == 'DNN':
-        model_name = f"DNN_CV_{input_size}x{input_size}_{timestamp}_{output_type}_{layers}"
+        model_name = f"DNN_CV_{input_size}x{input_size}_{timestamp}_{output_type}_{loss_name}_{layers}"
     elif arch.upper() == 'CNN1':
-        model_name = f"CNN1_CV_{input_size}x{input_size}_{timestamp}_{output_type}"
+        model_name = f"CNN1_CV_{input_size}x{input_size}_{timestamp}_{output_type}_{loss_name}"
     else:
-        model_name = f"Other_CV_{input_size}x{input_size}_{timestamp}_{output_type}"
+        model_name = f"Other_CV_{input_size}x{input_size}_{timestamp}_{output_type}_{loss_name}"
     return input_size, num_filters,kernel_size,activation,kernel_regularizer,model_name, output_type, layers
 
 
@@ -39,18 +40,19 @@ def getTrainingParams():
         return tf.reduce_mean(tf.image.ssim(y_true, y_pred, 1.0))
     metrics = ['accuracy', SSIMMetric]
     test_split = 0.2
-    random_state = 3213
-    loss_name = 'MSE'
-    batch_size = 32
+    random_state = 1561
+    loss_name = 'custom_SSIM'
+    batch_size = 64
     epoch_limit = 600
+    norm = 'norm'
 
-    return initial_lr, loss_name, metrics, test_split, random_state, batch_size, epoch_limit
+    return initial_lr, loss_name, metrics, test_split, random_state, batch_size, epoch_limit, norm
 
 
-def load_data(img_dir, test_size, random_state, output_type):
+def load_data(img_dir, test_size, random_state, output_type, input_size, norm):
 
-    X = np.load(os.path.join(img_dir, 'mixed_patches.npz'))['arr_0']
-    y = np.load(os.path.join(img_dir, f'{output_type}_patches.npz'))['arr_0']
+    X = np.load(os.path.join(img_dir, f'mixed_patches_{input_size}_{norm}.npz'))['arr_0']
+    y = np.load(os.path.join(img_dir, f'{output_type}_patches_{input_size}_{norm}.npz'))['arr_0']
     X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=test_size, random_state=random_state)
     print(X_train.shape, X_valid.shape, y_train.shape, y_valid.shape)
     print(X_train.dtype, X_valid.dtype, y_train.dtype, y_valid.dtype)
@@ -69,10 +71,11 @@ def main():
     dataset_dir = os.path.join(cnn_dir, dataset_folder)
     print('[INFO] Getting params')
     arch = 'DNN'
-    input_size, num_filters, kernel_size, activation, kernel_regularizer, model_name, output_type, layers = get_params(arch)
-    initial_lr, loss_name, metrics, test_split, random_state,  batch_size, epoch_limit = getTrainingParams()
+    initial_lr, loss_name, metrics, test_split, random_state,  batch_size, epoch_limit, norm = getTrainingParams()
+    input_size, num_filters, kernel_size, activation, kernel_regularizer, model_name, output_type, layers = get_params(arch, loss_name)
+
     print('[INFO] Loading data')
-    X_train, X_valid, y_train, y_valid = load_data(img_dir, test_split, random_state, output_type)
+    X_train, X_valid, y_train, y_valid = load_data(img_dir, test_split, random_state, output_type, input_size, norm)
 
     #
     # fig, ax = plt.subplots(1,2)

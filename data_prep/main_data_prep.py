@@ -41,8 +41,8 @@ def img_splitter(iter, img_mixed, img_fringes, img_bg, mixed_name, patch_dict, f
 
 
 
-def main():
-    img_dir = os.path.join(os.getcwd(), 'data_test')
+def main(size):
+    img_dir = os.path.join(os.getcwd(), 'data_test', 'faces')
     mixed_dir = os.path.join(img_dir, 'mixed')
     fringes_dir = os.path.join(img_dir, 'fringes')
     bg_dir = os.path.join(img_dir, 'bg')
@@ -54,8 +54,8 @@ def main():
     os.makedirs(bg_patch_dir, exist_ok=True)
     patch_dict = {}
     img_dict = {}
-    #mixed = random.sample(next(os.walk(mixed_dir))[2],50)
-    mixed = next(os.walk(mixed_dir))[2]
+    mixed = random.sample(next(os.walk(mixed_dir))[2],100)
+    #mixed = next(os.walk(mixed_dir))[2]
     fringes = [file.split('_')[-1] for file in mixed]
     bg = [f"{'_'.join(file.split('_')[:-1])}.jpg" for file in mixed]
     # print(mixed)
@@ -65,17 +65,17 @@ def main():
     for mixed_name, fringes_name, bg_name in tqdm(zip(mixed, fringes, bg), desc="PREPARING PATCHES: "):
         iter +=1
         img_mixed = imageio.v2.imread(os.path.join(mixed_dir,mixed_name))
-        img_fringes = imageio.v2.imread(os.path.join(fringes_dir,fringes_name))
+        img_fringes = np.resize(imageio.v2.imread(os.path.join(fringes_dir,fringes_name)), img_mixed.shape)
         img_bg = imageio.v2.imread(os.path.join(bg_dir,bg_name))
-        patch_dict_single, img_dict_single = img_splitter(iter, img_mixed, img_fringes, img_bg, mixed_name, patch_dict, fringe_patch_dir, mixed_patch_dir,bg_patch_dir, 512)
+        patch_dict_single, img_dict_single = img_splitter(iter, img_mixed, img_fringes, img_bg, mixed_name, patch_dict, fringe_patch_dir, mixed_patch_dir,bg_patch_dir, size)
 
         patch_dict.update(patch_dict_single)
         img_dict.update(img_dict_single)
 
         del img_mixed, img_fringes, patch_dict_single
 
-    json.dump(patch_dict, open(f"{img_dir}/image_coords.json", 'w'), indent=4)
-    json.dump(img_dict, open(f"{img_dir}/image_pairs.json", 'w'), indent=4)
+    json.dump(patch_dict, open(f"{img_dir}/image_coords_{size}.json", 'w'), indent=4)
+    json.dump(img_dict, open(f"{img_dir}/image_pairs_{size}.json", 'w'), indent=4)
 
 
 
@@ -83,5 +83,5 @@ def main():
 if __name__ == '__main__':
     size = sys.argv[1]
     print(size)
-    main()
+    main(int(size))
     to_npy.main(int(size))

@@ -31,7 +31,7 @@ def load_imgs(img_dirs,size):
     imgs = np.empty((len(mixed), size,size,1))
 
     for idx, filename in enumerate(mixed):
-        imgs[idx] = (np.resize(imageio.v2.imread(os.path.join(os.getcwd(), 'data_for_test',f'patches_{size}', 'mixed', filename)).astype('float32'), (size,size,1)))
+        imgs[idx] = (np.resize((imageio.v2.imread(os.path.join(os.getcwd(), 'data_for_test',f'patches_{size}', 'mixed', filename))/255.0).astype('float32'), (size,size,1)))
 
     return imgs, mixed
 
