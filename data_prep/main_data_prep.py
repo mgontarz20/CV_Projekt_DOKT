@@ -42,7 +42,7 @@ def img_splitter(iter, img_mixed, img_fringes, img_bg, mixed_name, patch_dict, f
 
 
 def main(size):
-    img_dir = os.path.join(os.getcwd(), 'data_test', 'faces')
+    img_dir = os.path.join(os.getcwd(), 'data_test')
     mixed_dir = os.path.join(img_dir, 'mixed')
     fringes_dir = os.path.join(img_dir, 'fringes')
     bg_dir = os.path.join(img_dir, 'bg')
@@ -54,10 +54,10 @@ def main(size):
     os.makedirs(bg_patch_dir, exist_ok=True)
     patch_dict = {}
     img_dict = {}
-    mixed = random.sample(next(os.walk(mixed_dir))[2],100)
+    mixed = random.sample(next(os.walk(mixed_dir))[2],1000)
     #mixed = next(os.walk(mixed_dir))[2]
     fringes = [file.split('_')[-1] for file in mixed]
-    bg = [f"{'_'.join(file.split('_')[:-1])}.jpg" for file in mixed]
+    bg = [f"{'_'.join(file.split('_')[:-1])}.png" for file in mixed]
     # print(mixed)
     # print(fringes)
     # print(len(mixed))

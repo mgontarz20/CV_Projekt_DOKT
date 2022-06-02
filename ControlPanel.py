@@ -22,13 +22,13 @@ def get_params(arch:str, loss_name:str):
     timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M')
     output_type = 'fringes'
 
-    layers = 12
+    layers = 15
     if arch.upper() == 'DNN':
-        model_name = f"DNN_CV_{input_size}x{input_size}_{timestamp}_{output_type}_{loss_name}_{layers}"
+        model_name = f"DNN_CV_{input_size}x{input_size}_faces_{timestamp}_{output_type}_{loss_name}_{layers}"
     elif arch.upper() == 'CNN1':
-        model_name = f"CNN1_CV_{input_size}x{input_size}_{timestamp}_{output_type}_{loss_name}"
+        model_name = f"CNN1_CV_{input_size}x{input_size}_faces_{timestamp}_{output_type}_{loss_name}"
     else:
-        model_name = f"Other_CV_{input_size}x{input_size}_{timestamp}_{output_type}_{loss_name}"
+        model_name = f"Other_CV_{input_size}x{input_size}_faces_{timestamp}_{output_type}_{loss_name}"
     return input_size, num_filters,kernel_size,activation,kernel_regularizer,model_name, output_type, layers
 
 
