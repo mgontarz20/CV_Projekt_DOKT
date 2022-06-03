@@ -37,12 +37,14 @@ def load_imgs(img_dirs,size):
 
 def predict(cnn_paths, dirs, imgs, save_path, filenames, size):
     models = []
+    preds_path = f'c:/Users/mgont/PycharmProjects/CV_Projekt_DOKT/testings/data_for_test/preds_{size}'
+    #preds_path = f'/home/mgontarz/PycharmProjects/CV_Projekt_DOKT/testings/data_for_test/preds_{size}'
     for dir in dirs:
         files = next(os.walk(os.path.join(cnn_paths, dir)))[2]
         if int(dir.split('_')[2].split('x')[0])== size:
             for file in files:
                 if file.endswith('h5'):
-                    if file.split('.')[0] not in next(os.walk(f'/home/mgontarz/PycharmProjects/CV_Projekt_DOKT/testings/data_for_test/preds_{size}'))[1]:
+                    if file.split('.')[0] not in next(os.walk(preds_path))[1]:
 
                         model = load_model(os.path.join(cnn_paths, dir, file), custom_objects={'SSIMMetric': SSIMMetric, "custom_mse_SSIM_Loss":custom_mse_SSIM_Loss}, compile=False)
                         os.makedirs(os.path.join(save_path, file.split('.')[0]),exist_ok=True)
@@ -50,7 +52,7 @@ def predict(cnn_paths, dirs, imgs, save_path, filenames, size):
                             try:
                                 pred = model.predict(img).astype('float32')[:,:,:,0]
                                 print(pred.shape)
-                                imageio.imwrite(os.path.join(save_path, file.split('.')[0], f"{filename.split('.')[0]}.tiff"), pred)
+                                imageio.imwrite(os.path.join(save_path, file.split('.')[0], f"{filename.split('.')[0]}.tiff"), pred*255.0)
                             except FileNotFoundError as err:
                                 print(err)
                                 pass

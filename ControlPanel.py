@@ -18,13 +18,13 @@ def get_params(arch:str, loss_name:str):
     num_filters = 64
     kernel_size = 3
     activation = 'relu'
-    kernel_regularizer = 'l2'
+    kernel_regularizer = 'l1'
     timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M')
     output_type = 'fringes'
 
     layers = 15
     if arch.upper() == 'DNN':
-        model_name = f"DNN_CV_{input_size}x{input_size}_faces_{timestamp}_{output_type}_{loss_name}_{layers}"
+        model_name = f"DNN_CV_{input_size}x{input_size}_faces_{timestamp}_{output_type}_sc_{loss_name}_{layers}"
     elif arch.upper() == 'CNN1':
         model_name = f"CNN1_CV_{input_size}x{input_size}_faces_{timestamp}_{output_type}_{loss_name}"
     else:
@@ -41,8 +41,8 @@ def getTrainingParams():
     metrics = ['accuracy', SSIMMetric]
     test_split = 0.2
     random_state = 1561
-    loss_name = 'custom_SSIM'
-    batch_size = 64
+    loss_name = 'MSE'
+    batch_size = 32
     epoch_limit = 600
     norm = 'norm'
 

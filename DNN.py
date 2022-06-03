@@ -56,7 +56,7 @@ class DNN:
         self.loss_name = loss_name
         self.metrics = metrics
 
-        self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate = self.initial_lr, epsilon = 0.0001, beta_1 = 0.95), loss = self.custom_mse_SSIM_Loss, metrics = self.metrics)
+        self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate = self.initial_lr, epsilon = 0.0001, beta_1 = 0.95), loss =MeanSquaredError(), metrics = self.metrics)
 
         if summarize:
             self.model.summary()

@@ -4,6 +4,7 @@ import os
 import json
 import random
 from tqdm import tqdm
+import cv2 as cv
 
 def img_splitter(iter, img_mixed, img_fringes, img_bg, mixed_name, patch_dict, fringe_patch_dir, mixed_patch_dir, bg_patch_dir, window_size):
 
@@ -44,8 +45,8 @@ def main():
     img_dir = os.path.join(os.getcwd(), 'data_for_test')
     mixed_dir = os.path.join(img_dir, 'mixed')
     fringes_dir = os.path.join(img_dir, 'fringes')
-    models_dir = '/home/mgontarz/PycharmProjects/CV_Projekt_DOKT/results'
-
+    #models_dir = '/home/mgontarz/PycharmProjects/CV_Projekt_DOKT/results'
+    models_dir = r"c:/Users/mgont/PycharmProjects/CV_Projekt_DOKT/results"
     bg_dir = os.path.join(img_dir, 'bg')
 
 
@@ -56,7 +57,7 @@ def main():
     #mixed = random.sample(next(os.walk(mixed_dir))[2], 50)
     mixed = next(os.walk(mixed_dir))[2]
     fringes = [file.split('_')[-1] for file in mixed]
-    bg = [f"{'_'.join(file.split('_')[:-1])}.jpg" for file in mixed]
+    bg = [f"{'_'.join(file.split('_')[:-1])}.png" for file in mixed]
     # print(mixed)
     # print(fringes)
     # print(len(mixed))
@@ -64,7 +65,7 @@ def main():
     for mixed_name, fringes_name, bg_name in tqdm(zip(mixed, fringes, bg), desc="PREPARING PATCHES: "):
         iter += 1
         img_mixed = imageio.v2.imread(os.path.join(mixed_dir, mixed_name))
-        img_fringes = imageio.v2.imread(os.path.join(fringes_dir, fringes_name))
+        img_fringes = cv.resize(imageio.v2.imread(os.path.join(fringes_dir, fringes_name)), dsize = (img_mixed.shape[1], img_mixed.shape[0]), interpolation=cv.INTER_AREA)
         img_bg = imageio.v2.imread(os.path.join(bg_dir, bg_name))
         for size in img_sizes:
             fringe_patch_dir = os.path.join(img_dir, f'patches_{size}', 'fringes')

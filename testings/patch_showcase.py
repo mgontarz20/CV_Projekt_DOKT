@@ -13,7 +13,7 @@ def choose_filenames(pred_dir):
             continue
         files = next(os.walk(os.path.join(pred_dir, dir)))[2]
         try:
-            chosen = sample(files, 5)
+            chosen = sample(files, 10)
         except ValueError:
             chosen = files
 
@@ -33,24 +33,26 @@ def load_imgs(pred_dir, patch_dir, file_path, size, type):
 
     return pred, patch_mixed, patch_fringes
 def main():
-    data_dir = "/home/mgontarz/PycharmProjects/CV_Projekt_DOKT/testings/data_for_test"
+    #data_dir = "/home/mgontarz/PycharmProjects/CV_Projekt_DOKT/testings/data_for_test"
+    data_dir = 'c:/Users/mgont/PycharmProjects/CV_Projekt_DOKT/testings/data_for_test'
     folders = next(os.walk(data_dir))[1]
 
 
-    models_dir = '/home/mgontarz/PycharmProjects/CV_Projekt_DOKT/results'
-
+    #models_dir = '/home/mgontarz/PycharmProjects/CV_Projekt_DOKT/results'
+    models_dir = 'c:/Users/mgont/PycharmProjects/CV_Projekt_DOKT/results'
     img_sizes = set([int(file.split("_")[2].split('x')[0]) for file in next(os.walk(models_dir))[1]])
     print(img_sizes)
 
     for size in img_sizes:
         pred_dir = os.path.join(data_dir, f'preds_{size}')
         patch_dir = os.path.join(data_dir, f'patches_{size}')
+        os.makedirs(os.path.join(pred_dir, f'showcase_{size}'), exist_ok=True)
+
 
         chosen_paths = choose_filenames(pred_dir)
         for path in chosen_paths:
             path = path.replace('\\', '/')
-
-            if f'{path.split("/")[-2]}' not in next(os.walk(f'{"/".join(path.split("/")[:-2])}/showcase_{size}/'))[1] or len(next(os.walk(f'{"/".join(path.split("/")[:-2])}/showcase_{size}/{path.split("/")[-2]}'))[2]) <= 5:
+            if f'{path.split("/")[-2]}' not in next(os.walk(f'{"/".join(path.split("/")[:-2])}/showcase_{size}/'))[1] or len(next(os.walk(f'{"/".join(path.split("/")[:-2])}/showcase_{size}/{path.split("/")[-2]}'))[2]) <= 10:
                 fig, ax = plt.subplots(1, 3, figsize=(25, 15))
                 os.makedirs(f'{"/".join(path.split("/")[:-2])}/showcase_{size}/{path.split("/")[-2]}',exist_ok=True)
                 if len(path.split("_")) == 6:
