@@ -28,15 +28,14 @@ def stitcher(patch_out_dir, results_dir, input_name):
     patch_outs = next(os.walk(patch_out_dir))[2]
     to_stitch_on = np.zeros((512,512), dtype = 'float32')
     for patch_out in patch_outs:
-        print(patch_out)
         h = w = 64
-        x = patch_out.split("_")[0]
-        y = patch_out.split("_")[1]
-        patch_out_img = imageio.v2.imread(patch_out_dir, patch_out).astype('float32')
+        x = int(patch_out.split("_")[0])
+        y = int(patch_out.split("_")[1])
+        patch_out_img = imageio.v2.imread(os.path.join(patch_out_dir, patch_out)).astype('float32')
         to_stitch_on[x:x+h, y:y+w] =  patch_out_img[16:80, 16:80]
 
     imageio.imwrite(os.path.join(results_dir, f'{input_name}.tiff'),to_stitch_on)
-    imageio.imwrite(os.path.join(results_dir, input_name),to_stitch_on)
+    imageio.imwrite(os.path.join(results_dir, input_name),to_stitch_on.astype(np.uint8))
 
 
 if __name__ == '__main__':
@@ -60,7 +59,7 @@ if __name__ == '__main__':
     patch_inputs = next(os.walk(patch_in_dir))[2]
     for patch_name in patch_inputs:
         patch = imageio.v2.imread(os.path.join(patch_in_dir, patch_name))
-        pred = model.predict(np.array([patch]), verbose = 0)[0,:,:,0]
+        pred = model.predict(np.array([patch]), verbose = 0)[0]
 
         imageio.imwrite(os.path.join(patch_out_dir, patch_name), pred*255.0)
 
