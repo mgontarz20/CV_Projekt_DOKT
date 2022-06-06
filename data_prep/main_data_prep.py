@@ -26,7 +26,7 @@ def img_splitter(iter, img_mixed, img_fringes, img_bg, mixed_name, patch_dict, f
             patch_fringe_name = f"{j}_{i}_{patch_mixed_name.split('_')[-1]}"
 
             patch_dict[mixed_name][patch_mixed_name] = f"{j}_{i}"
-            i += (window_size-10)
+            i += (window_size-32)
 
             img_dict[patch_mixed_name] = (patch_fringe_name, patch_bg_name)
             if img_fringes_patch.shape == (window_size,window_size):
@@ -35,7 +35,7 @@ def img_splitter(iter, img_mixed, img_fringes, img_bg, mixed_name, patch_dict, f
 
                 imageio.imwrite(os.path.join(mixed_patch_dir, f"{patch_mixed_name}"), img_mixed_patch)
         i = 0
-        j += (window_size-10)
+        j += (window_size-32)
 
     return patch_dict, img_dict
 
@@ -54,7 +54,7 @@ def main(size):
     os.makedirs(bg_patch_dir, exist_ok=True)
     patch_dict = {}
     img_dict = {}
-    mixed = random.sample(next(os.walk(mixed_dir))[2],130)
+    mixed = random.sample(next(os.walk(mixed_dir))[2],100)
     #mixed = next(os.walk(mixed_dir))[2]
     fringes = [file.split('_')[-1] for file in mixed]
     bg = [f"{'_'.join(file.split('_')[:-1])}.jpg" for file in mixed]
@@ -64,9 +64,9 @@ def main(size):
     iter = 0
     for mixed_name, fringes_name, bg_name in tqdm(zip(mixed, fringes, bg), desc="PREPARING PATCHES: "):
         iter +=1
-        img_mixed = imageio.v2.imread(os.path.join(mixed_dir,mixed_name))
-        img_fringes = np.resize(imageio.v2.imread(os.path.join(fringes_dir,fringes_name)), img_mixed.shape)
-        img_bg = imageio.v2.imread(os.path.join(bg_dir,bg_name))
+        img_mixed = np.pad(imageio.v2.imread(os.path.join(mixed_dir,mixed_name)), pad_width=[(16,16), (16,16)], mode='edge')
+        img_fringes = np.pad(np.resize(imageio.v2.imread(os.path.join(fringes_dir,fringes_name)),img_mixed.shape), pad_width=[(16,16), (16,16)], mode='edge')
+        img_bg = np.pad(imageio.v2.imread(os.path.join(bg_dir,bg_name)), pad_width=[(16,16), (16,16)], mode='edge')
         patch_dict_single, img_dict_single = img_splitter(iter, img_mixed, img_fringes, img_bg, mixed_name, patch_dict, fringe_patch_dir, mixed_patch_dir,bg_patch_dir, size)
 
         patch_dict.update(patch_dict_single)
