@@ -12,6 +12,7 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau, T
 
 
 class DNN:
+    """One of the initial models tested. It had some promising results, however the final Unet model was the best."""
     def __init__(self, input_size, num_filters, kernel_size, activation, kernel_regularizer, model_name, cnn_dir, layers):
         self.cnn_dir = cnn_dir
         self.model_name = model_name

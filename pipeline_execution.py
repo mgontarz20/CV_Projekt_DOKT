@@ -4,6 +4,8 @@ import imageio
 from keras.models import load_model
 
 def img_splitter(img_mixed, mixed_name, mixed_patch_dir, window_size):
+
+    """Splits tested image as in the dataset generation."""
     rows, cols = img_mixed.shape
 
     j = i = 0
@@ -25,6 +27,8 @@ def img_splitter(img_mixed, mixed_name, mixed_patch_dir, window_size):
 
 
 def stitcher(patch_out_dir, results_dir, input_name):
+
+    """Stitching images back to 512x512 from patches."""
     patch_outs = next(os.walk(patch_out_dir))[2]
     to_stitch_on = np.zeros((512,512), dtype = 'float32')
     for patch_out in patch_outs:
@@ -37,8 +41,11 @@ def stitcher(patch_out_dir, results_dir, input_name):
     imageio.imwrite(os.path.join(results_dir, f'{input_name}.tiff'),to_stitch_on)
     imageio.imwrite(os.path.join(results_dir, input_name),to_stitch_on.astype(np.uint8))
 
+def main():
+    """Function used to execute the pipeline. An fringe image with background needs to be placed
+    into the execute directory, and the script cuts it, predicts on patches and stitches it back to generate result."""
 
-if __name__ == '__main__':
+
     maindir = os.getcwd()
     img_dir = os.path.join(maindir,'execute')
     patch_in_dir = os.path.join(img_dir, 'temp','patch_input')
@@ -64,3 +71,7 @@ if __name__ == '__main__':
         imageio.imwrite(os.path.join(patch_out_dir, patch_name), pred*255.0)
 
     stitcher(patch_out_dir, result_dir, input_name)
+
+if __name__ == '__main__':
+    main()
+

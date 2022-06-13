@@ -14,6 +14,7 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau, T
 
 
 class CNN1:
+    """Another model that has been tried, none of the results were good, however it seems bad not to include it in the repo."""
     def __init__(self, input_size, num_filters, kernel_size, activation, kernel_regularizer, model_name, cnn_dir):
         self.cnn_dir = cnn_dir
         self.model_name = model_name
@@ -29,7 +30,6 @@ class CNN1:
         self.input_img = Input((self.input_size, self.input_size, 1), name='img')
 
     def residual_block(self, input_tensor):
-        """Funkcja definiująca blok resztkowy jako dwa bloki konwolucyjne i połącznenie skrótowe."""
 
         x = layers.Activation(self.activation)(input_tensor)
         x = layers.Conv2D(filters=self.num_filters, kernel_size=(self.kernel_size, self.kernel_size), strides=(1,1),

@@ -1,4 +1,6 @@
 import os
+import keras.layers
+import UNetResNet_5lvl
 from DNN import DNN
 from CNN1_FPAUDL import CNN1
 from datetime import datetime
@@ -8,14 +10,16 @@ from sklearn.model_selection import train_test_split
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau, CSVLogger, ModelCheckpoint
 
 def SSIMMetric(self, y_true, y_pred):
     return tf.reduce_mean(tf.image.ssim(y_true, y_pred, 1.0))
 
 
 def get_params(arch:str, loss_name:str):
-    input_size = 64
-    num_filters = 64
+    """Model parameter definition."""
+    input_size = 96
+    num_filters = 32
     kernel_size = 3
     activation = 'relu'
     kernel_regularizer = 'l1'
@@ -28,11 +32,13 @@ def get_params(arch:str, loss_name:str):
     elif arch.upper() == 'CNN1':
         model_name = f"CNN1_CV_{input_size}x{input_size}_faces_{timestamp}_{output_type}_{loss_name}"
     else:
-        model_name = f"Other_CV_{input_size}x{input_size}_faces_{timestamp}_{output_type}_{loss_name}"
+        model_name = f"UNet_CV_{input_size}x{input_size}_faces_{timestamp}_{output_type}_{loss_name}"
     return input_size, num_filters,kernel_size,activation,kernel_regularizer,model_name, output_type, layers
 
 
 def getTrainingParams():
+
+    """Definition of training parameters."""
     initial_lr = 0.0001
     #loss = custom_mse_SSIM_Loss(y_true, y_pred)
 
@@ -42,7 +48,7 @@ def getTrainingParams():
     test_split = 0.2
     random_state = 1561
     loss_name = 'MSE'
-    batch_size = 32
+    batch_size = 8
     epoch_limit = 600
     norm = 'norm'
 
@@ -50,7 +56,7 @@ def getTrainingParams():
 
 
 def load_data(img_dir, test_size, random_state, output_type, input_size, norm):
-
+    """Data loading"""
     X = np.load(os.path.join(img_dir, f'mixed_patches_{input_size}_{norm}.npz'))['arr_0']
     y = np.load(os.path.join(img_dir, f'{output_type}_patches_{input_size}_{norm}.npz'))['arr_0']
     X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=test_size, random_state=random_state)
@@ -63,6 +69,10 @@ def load_data(img_dir, test_size, random_state, output_type, input_size, norm):
 
 
 def main():
+
+    """The main control panel used for model training. Here the data is loaded, split into
+    test/train splits and then the model is trained on it. The model is trained on GPU"""
+
     print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
     cnn_dir = os.getcwd()
@@ -77,25 +87,27 @@ def main():
     print('[INFO] Loading data')
     X_train, X_valid, y_train, y_valid = load_data(img_dir, test_split, random_state, output_type, input_size, norm)
 
-    #
-    # fig, ax = plt.subplots(1,2)
-    #
-    # ax[0].imshow(X_train[1000])
-    # ax[1].imshow(y_train[1000])
-    #
-    # plt.show()
 
     print('[INFO] Data loaded, Defining and initializing model')
-    DNN_40x40 = DNN(input_size, num_filters,kernel_size,activation,kernel_regularizer,model_name, cnn_dir, layers)
+    #CALLBACK DEFINITION
+    callbacks = [
+        EarlyStopping(patience=40, verbose=1),
+        ReduceLROnPlateau(factor=0.1, patience=20, min_lr=0.00000001, verbose=1),
+        ModelCheckpoint(f'{cnn_dir}/results/{model_name}/{model_name}.h5', verbose=1,
+                        save_best_only=True),
+        CSVLogger(f"{cnn_dir}/results/{model_name}/{model_name}.csv"),
+    ]
+    #FRAGMENT USED TO TRAIN INITIAL DNN MODEL
+    # DNN_40x40 = DNN(input_size, num_filters,kernel_size,activation,kernel_regularizer,model_name, cnn_dir, layers)
+    #
+    # model = DNN_40x40.getModel()
+    # DNN_40x40.compile(initial_lr,metrics, loss_name,summarize=True, tofile=True)
+    # DNN_40x40.train(X_train, y_train, X_valid, y_valid, batch_size, epoch_limit, verbose=1)
+    # DNN_40x40.save_log(test_split, random_state, dataset_dir, trained=True)
+    #
+    # DNN_40x40.plot_results(trained=True)
 
-    model = DNN_40x40.getModel()
-    DNN_40x40.compile(initial_lr,metrics, loss_name,summarize=True, tofile=True)
-    DNN_40x40.train(X_train, y_train, X_valid, y_valid, batch_size, epoch_limit, verbose=1)
-    DNN_40x40.save_log(test_split, random_state, dataset_dir, trained=True)
-
-    DNN_40x40.plot_results(trained=True)
-
-
+    #FRAGMENT USED TO TRAIN THE NEXT MODEL
     # CNN1Faudl = CNN1(input_size, num_filters,kernel_size,activation,kernel_regularizer,model_name, cnn_dir, layers)
     #
     # model = CNN1Faudl.getModel()
@@ -106,6 +118,17 @@ def main():
     # CNN1Faudl.plot_results(trained=False)
 
 
+
+    #TRAINING USING THE FINAL U-Net MODEL
+    input_img = keras.layers.Input(shape=(96,96,1))
+    model = UNetResNet_5lvl.get_unet(input_img, n_filters = num_filters, kernel_size = kernel_size, activation = activation)
+
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001, epsilon=1e-07),
+                  loss=MeanSquaredError(), metrics=metrics)
+    model.summary()
+
+    results = model.fit(X_train, y_train, batch_size=batch_size, epochs=epoch_limit, callbacks=callbacks,
+                        validation_data=(X_valid, y_valid), verbose=1)
 
 
 if __name__ == '__main__':

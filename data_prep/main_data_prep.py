@@ -7,7 +7,7 @@ from tqdm import tqdm
 import to_npy
 import sys
 def img_splitter(iter, img_mixed, img_fringes, img_bg, mixed_name, patch_dict, fringe_patch_dir, mixed_patch_dir, bg_patch_dir, window_size):
-
+    """Function responsible for splitting the image into patches and saving the patches coordinates in the original image."""
     rows, cols = img_mixed.shape
 
     if img_mixed.shape != img_fringes.shape:
@@ -42,6 +42,12 @@ def img_splitter(iter, img_mixed, img_fringes, img_bg, mixed_name, patch_dict, f
 
 
 def main(size):
+    """This script serves as a control panel for data preparation for learning.
+        Here a random portion of an initial dataset created by Oskar is loaded, and then
+        a background image, a mixed image and the fringe pattern are cut into the same patches of size 96x96
+        with overlap. All the data saved for training is saved in a temp folder called 'data_test', which is not included in the repo."""
+    #Directory generation
+
     img_dir = os.path.join(os.getcwd(), 'data_test')
     mixed_dir = os.path.join(img_dir, 'mixed')
     fringes_dir = os.path.join(img_dir, 'fringes_sc')
@@ -52,15 +58,16 @@ def main(size):
     os.makedirs(fringe_patch_dir, exist_ok=True)
     os.makedirs(mixed_patch_dir, exist_ok=True)
     os.makedirs(bg_patch_dir, exist_ok=True)
+
+
+    #Random sample chosen from original dataset
     patch_dict = {}
     img_dict = {}
     mixed = random.sample(next(os.walk(mixed_dir))[2],100)
-    #mixed = next(os.walk(mixed_dir))[2]
     fringes = [file.split('_')[-1] for file in mixed]
     bg = [f"{'_'.join(file.split('_')[:-1])}.png" for file in mixed]
-    # print(mixed)
-    # print(fringes)
-    # print(len(mixed))
+
+    #Loop to load, pad and cut images for training
     iter = 0
     for mixed_name, fringes_name, bg_name in tqdm(zip(mixed, fringes, bg), desc="PREPARING PATCHES: "):
         iter +=1
@@ -74,6 +81,7 @@ def main(size):
 
         del img_mixed, img_fringes, patch_dict_single
 
+    #Json files saving, as a reminder of image coordinates
     json.dump(patch_dict, open(f"{img_dir}/image_coords_{size}.json", 'w'), indent=4)
     json.dump(img_dict, open(f"{img_dir}/image_pairs_{size}.json", 'w'), indent=4)
 
@@ -81,7 +89,9 @@ def main(size):
 
 
 if __name__ == '__main__':
+
+
     size = sys.argv[1]
-    print(size)
+    #print(size)
     main(int(size))
     to_npy.main(int(size))
