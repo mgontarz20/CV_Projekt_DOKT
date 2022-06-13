@@ -1,11 +1,4 @@
 /env/
 /venv/
-/results/
 /data_prep/data_test/
-/testings/data_for_test/
-/execute/
-/some models/
-/good_model/
-
-/plot_uczenia.png
-/decent.rar
+/model testing/data_for_test/

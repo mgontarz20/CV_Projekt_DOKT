@@ -1,28 +1,74 @@
-from keras.utils.vis_utils import plot_model
-
-import matplotlib.pyplot as plt
 import numpy as np
+import os
+import matplotlib.pyplot as plt
+import pandas as pd
 
-def plot_model_data(root, model, name, results):
 
-    plot_model(model, to_file=f"{root}{name}/{name}model_'LR'.jpg",show_layer_names= True, rankdir = 'LR', expand_nested=True, show_shapes=True)
-    plot_model(model, to_file=f"{root}{name}/{name}model_'TB'.jpg",show_layer_names= True, rankdir = 'TB', expand_nested=False, show_shapes=True)
+if __name__ == '__main__':
 
-    plt.figure(figsize=(10, 10))
-    plt.title("Learning curve")
-    plt.plot(results.history["loss"], label="loss")
-    plt.plot(results.history["val_loss"], label="val_loss")
-    plt.plot( np.argmin(results.history["val_loss"]), np.min(results.history["val_loss"]), marker="x", color="r", label="best model")
-    plt.xlabel("Epochs")
-    plt.ylabel("log_loss")
-    plt.legend()
-    plt.savefig(f"{root}{name}/loss_{name}.jpg")
-    plt.clf()
-    plt.title("Learning curve")
-    plt.plot(results.history["accuracy"], label="Accuracy")
-    plt.plot(results.history["val_accuracy"], label="Val_Accuracy")
-    plt.plot( np.argmax(results.history["val_accuracy"]), np.max(results.history["val_accuracy"]), marker="x", color="r", label="best model")
-    plt.xlabel("Epochs")
-    plt.ylabel("Accuracy")
-    plt.legend()
-    plt.savefig(f"{root}{name}/acc_{name}.jpg")
+    df = pd.read_csv(
+        r'/good_model/UNet_5_96x96_2022-06-03_15-22_fringes_MSE/UNet_5_96x96_2022-06-03_15-22_fringes_MSE.csv')
+
+    # print(df.head)
+    # print(df.columns)
+
+
+    fig1, ax = plt.subplots(1,2, figsize = (20,8))
+
+    p1a, = ax[0].plot(df['epoch'],df['loss'], 'g--', linewidth = 1)
+    p1b, = ax[0].plot(df['epoch'],df['val_loss'], 'r-.', linewidth = 1.2)
+
+    p2a, = ax[1].plot(df['epoch'], df['SSIMMetric'], 'g--', linewidth = 1.1)
+    p2b, = ax[1].plot(df['epoch'], df['val_SSIMMetric'], 'r--', linewidth = 1.2)
+
+    pb1, = ax[0].plot(np.argmin(df['val_loss']), np.min(df['val_loss']), marker = 'x', markersize = 10, color= 'r')
+    ax[0].annotate(f'Best Validation Loss: {np.min(df["val_loss"])}\nFor Epoch: {np.argmin(df["val_loss"])} | Saved Model', (np.argmin(df['val_loss']), np.min(df['val_loss'])),
+
+            xytext=(np.argmin(df['val_loss']),np.min(df["val_loss"]) + 0.002),
+                   ha = 'center',
+                   bbox=dict(
+                    boxstyle="round",
+                    fc=(1.0, 0.7, 0.7),
+                    ec=(1., .5, .5),
+                   color = 'r'),
+                   arrowprops = dict(
+                       arrowstyle = '-|>',
+                   color = 'r')
+
+                   )
+    pb2, = ax[1].plot(df["epoch"][162], df["val_SSIMMetric"][162], marker = 'x', markersize = 10, color = 'r')
+    ax[1].annotate(
+        f'Validation SSIM Metric Value: {np.round(df["val_SSIMMetric"][162], 5)}\nFor Epoch: {df["epoch"][162]} | Saved Model',
+        (df["epoch"][162], df["val_SSIMMetric"][162]),
+
+        xytext=(df["epoch"][162], df["val_SSIMMetric"][162] - 0.04),
+        ha='center',
+        bbox=dict(
+            boxstyle="round",
+            fc=(1.0, 0.7, 0.7),
+            ec=(1., .5, .5),
+            color='r'),
+        arrowprops=dict(
+            arrowstyle='-|>',
+            color='r')
+
+        )
+
+
+    leg1 = ax[0].legend([p1a, p1b, pb1], ["Training Loss", "Validation Loss", "Best (Saved) Model"], loc = 'upper right')
+    leg2 = ax[1].legend([p2a, p2b, pb2], ["Training SSIM Metric", "Validation SSIM Metric", "Best (Saved) Model"], loc = 'lower right')
+
+    ax[0].set_title('Loss Graph (Mean Squared Error)')
+    ax[1].set_title('Metric Graph (SSIM)')
+
+    ax[0].set_xlabel('Epoch No.')
+    ax[0].set_ylabel('Loss Value')
+    ax[1].set_xlabel('Epoch No.')
+    ax[1].set_ylabel('Metric Value')
+
+    fig1.suptitle('Training Graphs', fontsize = 20)
+
+    plt.savefig(os.path.join(os.getcwd(), '../plot_uczenia.png'))
+
+
+    plt.show()
